@@ -6,6 +6,9 @@ from dcload import DCLoad, DEFAULT_ADCADDR, DEFAULT_DACGAIN, DEFAULT_ADCGAIN
 from smbpi.vfdcontrol import VFDController, trimpad
 from smbpi.ioexpand import MCP23017
 
+# either 20x4 or 16x2 depending on the module
+DISPLAY="20x4"
+
 
 class DCLoad_Control(DCLoad):
     def __init__(self,
@@ -27,7 +30,7 @@ class DCLoad_Control(DCLoad):
     def start(self):
         self.start_thread()
 
-    def update_display(self, actual_ma, actual_volts):
+    def update_display_16x2(self, actual_ma, actual_volts):
         # turn off cursor
         self.display.setDisplay(True, False, False)
 
@@ -49,6 +52,42 @@ class DCLoad_Control(DCLoad):
         else:
             self.display.setPosition(4+self.cursor_x, 0)
         self.display.setDisplay(True, True, False)
+
+    def update_display_20x4(self, actual_ma, actual_volts):
+        # turn off cursor
+        self.display.setDisplay(True, False, False)
+
+        watts = float(actual_volts) * float(actual_ma) / 1000.0
+
+        line1 = "Set: %6.3f A" % (self.desired_ma/1000.0)
+        line2 = "Act: %6.3f A" % (actual_ma/1000.0)
+        line3 = "Vol: %6.3f V" % actual_volts
+        line4 = "Pow: %6.3f W" % watts
+        
+        self.display.setPosition(0, 0)
+        self.display.writeStr(trimpad(line1, 20))
+
+        self.display.setPosition(0, 1)
+        self.display.writeStr(trimpad(line2, 20))
+
+        self.display.setPosition(0, 2)
+        self.display.writeStr(trimpad(line3, 20))
+
+        self.display.setPosition(0, 3)
+        self.display.writeStr(trimpad(line4, 20))
+
+        # turn on cursor
+        if self.cursor_x == 0:
+            self.display.setPosition(6, 0)
+        else:
+            self.display.setPosition(7+self.cursor_x, 0)
+        self.display.setDisplay(True, True, False)
+
+    def update_display(self, actual_ma, actual_volts):
+        if DISPLAY=="20x4":
+            self.update_display_20x4(actual_ma, actual_volts)
+        else:
+            self.update_display_16x2(actual_ma, actual_volts)
 
     def get_mult(self):
         if self.cursor_x == 3:
