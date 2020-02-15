@@ -5,6 +5,7 @@ import time
 from dcload import DCLoad, DEFAULT_ADCADDR, DEFAULT_DACGAIN, DEFAULT_ADCGAIN
 from smbpi.vfdcontrol import VFDController, trimpad
 from smbpi.ioexpand import MCP23017
+from smbpi.ds1820 import DS1820
 
 # either 20x4 or 16x2 depending on the module
 DISPLAY="20x4"
@@ -22,6 +23,9 @@ class DCLoad_Control(DCLoad):
         self.display = VFDController(MCP23017(bus, 0x20))
         self.display.setDisplay(True, False, False)
 
+        self.ds = DS1820()
+
+        self.temperature = 0.0
         self.desired_ma = 0
         self.cursor_x = 3
 
@@ -59,7 +63,7 @@ class DCLoad_Control(DCLoad):
 
         watts = float(actual_volts) * float(actual_ma) / 1000.0
 
-        line1 = "Set: %6.3f A" % (self.desired_ma/1000.0)
+        line1 = "Set: %6.3f A %6.1f C" % (self.desired_ma/1000.0, self.temperature)
         line2 = "Act: %6.3f A" % (actual_ma/1000.0)
         line3 = "Vol: %6.3f V" % actual_volts
         line4 = "Pow: %6.3f W" % watts
@@ -121,9 +125,15 @@ class DCLoad_Control(DCLoad):
 
         self.update_display(actual_ma, actual_volts)
 
+    def temperature_poll(self):
+        self.temperature = self.ds.measure_first_device()
+
     def start_thread(self):
         self.poll_thread = DCLoad_Thread(self)
         self.poll_thread.start()
+
+        self.temperature_thread = Temperature_Thread(self)
+        self.temperature_thread.start()
 
 
 class DCLoad_Thread(threading.Thread):
@@ -137,6 +147,19 @@ class DCLoad_Thread(threading.Thread):
         while not self.stopping:
             self.load.control_poll()
             time.sleep(0.01)
+
+
+class Temperature_Thread(threading.Thread):
+    def __init__(self, load):
+        threading.Thread.__init__(self)
+        self.load = load
+        self.daemon = True
+        self.stopping = False
+
+    def run(self):
+        while not self.stopping:
+            self.load.temperature_poll()
+            time.sleep(1)
 
 
 def main():
