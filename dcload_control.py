@@ -1,3 +1,9 @@
+# DCLoad Controller
+# Scott Baker, http://www.smbaker.com
+#
+# This implements the main control loop and the VFD/LCD user interface
+# for the pi-powered dc load.
+
 import smbus
 import spidev
 import threading
@@ -107,6 +113,9 @@ class DCLoad_Control(DCLoad):
         line3 = "Vol: %6.3f V" % self.actual_volts
         line4 = "Pow: %6.3f W" % watts
 
+        # The VFD supports a blink, but the problem I found is that with blink
+        # enabled, occasional cursors will be visible in non-cursor positions as
+        # the display is updated. So I chose to emulate blink myself.
         if self.display_nocursor:
             if self.update_count % 2 == 1:
                 line1 = line1[:cursor_offs] + chr(0xFF) + line1[(cursor_offs+1):]
@@ -118,7 +127,7 @@ class DCLoad_Control(DCLoad):
 
         self.display.setPosition(cursor_offs, 0)
         self.display.setDisplayCached(True, not self.display_nocursor, False)
-        
+
         self.update_count = self.update_count + 1
 
     def update_display(self):
