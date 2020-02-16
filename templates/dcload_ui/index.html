@@ -1,0 +1,57 @@
+{% load staticfiles %}
+
+<html><head>
+  <script src="{% static 'js/vendor/jquery-1.9.1.js' %}"></script>
+  <script src="{% static 'js/vendor/jquery-ui.js' %}"></script>
+  <script src="{% static 'js/vendor/chosen.jquery.js' %}"></script>
+  <script src="{% static 'js/dcload.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'css/bootstrap-3.2.0.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/jquery-ui.css' %}">
+  <link rel="stylesheet" href="{% static 'css/stereoui.css' %}">
+  <link rel="stylesheet" href="{% static 'css/dcload.css' %}">
+  <link rel="stylesheet" href="{% static 'css/color-buttons.css' %}">
+  <link rel="stylesheet" href="{% static 'css/chosen.css' %}">
+</head>
+<body>
+
+  <div id="actual" class="box">
+      <h3>Status</h3>
+      <table>
+      <tr><td class="now-playing-label">Amps:</td><td id="actual-ma"></td></tr>
+      <tr><td class="now-playing-label">Volts:</td><td id="actual-volts"></td></tr>
+      <tr><td class="now-playing-label">Watts:</td><td id="actual-watts"></td></tr>
+      <tr><td class="now-playing-label">Temp:</td><td id="actual-temp"></td></tr>
+      </table>
+      </div>
+
+<div id="load-setting" class="box">
+    <h3>Desired Amps</h3>
+    <div id="slider-ma"></div>
+    <div id="below-ma-slider"><span id="ma-setPoint"></span></div>
+    <div id="ma-buttons">
+    <div id="ma-buttons-plus">
+        <button class ="btn btn-ma" id="ma-plus-1"></span>+ 0.001</button>
+        <button class ="btn btn-ma" id="ma-plus-10"></span>+ 0.010</button>
+        <button class ="btn btn-ma" id="ma-plus-100"></span>+ 0.100</button>
+        <button class ="btn btn-ma" id="ma-plus-1000"></span>+ 1.000</button>
+    </div>
+    <div id="ma-buttons-minus">
+        <button class ="btn btn-ma" id="ma-minus-1"></span>- 0.001</button>
+        <button class ="btn btn-ma" id="ma-minus-10"></span>- 0.010</button>
+        <button class ="btn btn-ma" id="ma-minus-100"></span>- 0.100</button>
+        <button class ="btn btn-ma" id="ma-minus-1000"></span>- 1.000</button>
+    </div>
+    </div>
+    <div id="set-box">
+        <input id="ma-set-edit" class="ma-input" type="text" value=""/>
+        <input id="ma-set" class="btn-ma-set" type="submit" value="Set">
+    </div>
+    </div>
+
+<div id="power-control" class="box">
+        <h3>Enable</h3>
+        <button class ="btn btn-red btn-power" id="power-on"><span id="icon-power-on" class="icon-power glyphicon glyphicon-ok" aria-hidden="true"></span> on</button>
+        <button class ="btn btn-black btn-power" id="power-off"><span id="icon-power-off" class="icon-power glyphicon glyphicon-ok" aria-hidden="true"></span> off</button>
+    </div>
+
+</body>

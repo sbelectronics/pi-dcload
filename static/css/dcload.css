@@ -1,0 +1,49 @@
+/* #slider-ma {float:right;width:80%;}  */
+
+#actual-ma {text-align: right; font-family: monospace,monospace; font-size:1em;}
+#actual-volts {text-align: right; font-family: monospace,monospace; font-size:1em;}
+#actual-watts {text-align: right; font-family: monospace,monospace; font-size:1em;}
+#actual-temp {text-align: right; font-family: monospace,monospace; font-size:1em;}
+#ma-setpoint {text-align: right; font-family: monospace,monospace; font-size:1em;}
+
+.btn-ma {
+    margin-top: 5px;
+    width: 100px;
+}
+
+.ma-input,
+.btn-ma-set {
+    display: inline-block;
+    padding: 10px 15px;
+    font-size: 1em;
+    border-radius: 0;
+    -webkit-appearance: none;
+}
+
+.ma-input {
+    border: 1px solid lightgray;
+}
+
+.btn-ma-set {
+    background-color: lightgreen;
+    /**
+     * If the input field has a border,
+     * you need it here too to achieve equal heights.
+     */
+    border: 1px solid transparent;
+}
+
+#ma-buttons {
+    padding-top: 10px;
+}
+
+#set-box {
+    padding-top: 10px;
+}
+
+/*
+.btn-ma-set {
+    margin-top: 5px;
+    width: 50px;
+}
+*/

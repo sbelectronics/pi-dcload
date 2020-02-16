@@ -57,9 +57,7 @@ class DCLoad_Control(DCLoad):
 
         line1 = "A:%6.3f >%6.3f" % (self.desired_ma/1000.0, self.actual_ma/1000.0)
 
-        watts = float(self.actual_volts) * float(self.actual_ma) / 1000.0
-
-        line2 = "V:%6.3f W:%5.3f" % (self.actual_volts, watts)
+        line2 = "V:%6.3f W:%5.3f" % (self.actual_volts, self.actual_watts)
 
         self.display.setPosition(0, 0)
         self.display.writeStr(trimpad(line1, 16))
@@ -106,12 +104,10 @@ class DCLoad_Control(DCLoad):
         else:
             cursor_offs = 7 + self.cursor_x
 
-        watts = float(self.actual_volts) * float(self.actual_ma) / 1000.0
-
         line1 = "Set: %6.3f A %6.1f C" % (self.desired_ma/1000.0, self.temperature)
         line2 = "Act: %6.3f A" % (self.actual_ma/1000.0)
         line3 = "Vol: %6.3f V" % self.actual_volts
-        line4 = "Pow: %6.3f W" % watts
+        line4 = "Pow: %6.3f W" % self.actual_watts
 
         # The VFD supports a blink, but the problem I found is that with blink
         # enabled, occasional cursors will be visible in non-cursor positions as
@@ -149,6 +145,7 @@ class DCLoad_Control(DCLoad):
     def control_poll(self):
         self.actual_ma = self.GetActualMilliamps()
         self.actual_volts = self.GetActualVolts()
+        self.actual_watts = float(self.actual_volts) * float(self.actual_ma) / 1000.0
 
         if self.display.poller.get_button1_event():
             self.cursor_x = max(0, self.cursor_x-1)
@@ -178,6 +175,9 @@ class DCLoad_Control(DCLoad):
         self.temperature_thread = Temperature_Thread(self)
         self.temperature_thread.start()
 
+    def set_new_desired_ma(self, ma):
+        self.new_desired_ma = ma
+
 
 class DCLoad_Thread(threading.Thread):
     def __init__(self, load):
@@ -205,13 +205,18 @@ class Temperature_Thread(threading.Thread):
             time.sleep(1)
 
 
-def main():
+def startup():
+    global glo_dcload
+
     bus = smbus.SMBus(1)
     spi = spidev.SpiDev()
 
-    load = DCLoad_Control(bus, spi)
-    load.start()
+    glo_dcload = DCLoad_Control(bus, spi)
+    glo_dcload.start()
 
+
+def main():
+    startup()
     while True:
         time.sleep(1)
 

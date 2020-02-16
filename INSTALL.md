@@ -4,6 +4,7 @@ sudo raspi-config
 sudo apt-get update
 sudo apt-get -y install python-smbus i2c-tools python-pip
 
+# install spidev
 mkdir python-spi
 cd python-spi
 wget https://raw.github.com/doceme/py-spidev/master/setup.py
@@ -11,6 +12,9 @@ wget https://raw.github.com/doceme/py-spidev/master/spidev_module.c
 echo > README.md
 echo > CHANGELOG.md
 sudo python setup.py install
+
+# install django
+sudo pip install Django==1.7
 
 # On Pi-Zero-W increase the i2c speed
 sudo emacs /boot/config.txt
