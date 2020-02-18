@@ -13,6 +13,9 @@ from smbpi.vfdcontrol import VFDController, trimpad
 from smbpi.ioexpand import MCP23017
 from smbpi.ds1820 import DS1820
 
+DEFAULT_VTRIM=1.0
+DEFAULT_ATRIM=1.0
+
 # either 20x4 or 16x2 depending on the module
 DEFAULT_DISPLAY = "20x4"
 DEFAULT_NOCURSOR = True
@@ -26,7 +29,9 @@ class DCLoad_Control(DCLoad):
                  dacGain=DEFAULT_DACGAIN,
                  adcGain=DEFAULT_ADCGAIN,
                  display_kind=DEFAULT_DISPLAY,
-                 display_nocursor=DEFAULT_NOCURSOR):
+                 display_nocursor=DEFAULT_NOCURSOR,
+                 atrim=DEFAULT_ATRIM,
+                 vtrim=DEFAULT_VTRIM):
         DCLoad.__init__(self, bus, spi, adcAddr, dacGain, adcGain)
 
         self.display = VFDController(MCP23017(bus, 0x20), four_line = (display_kind=="20x4"))
@@ -36,6 +41,8 @@ class DCLoad_Control(DCLoad):
 
         self.ds = DS1820()
 
+        self.vtrim = vtrim
+        self.atrim = atrim
         self.temperature = 0.0
         self.desired_ma = 0
         self.actual_ma = 0
@@ -143,8 +150,8 @@ class DCLoad_Control(DCLoad):
             return 1000
 
     def control_poll(self):
-        self.actual_ma = self.GetActualMilliamps()
-        self.actual_volts = self.GetActualVolts()
+        self.actual_ma = self.GetActualMilliamps() * self.atrim
+        self.actual_volts = self.GetActualVolts() * self.vtrim
         self.actual_watts = float(self.actual_volts) * float(self.actual_ma) / 1000.0
 
         if self.display.poller.get_button1_event():
@@ -211,7 +218,7 @@ def startup():
     bus = smbus.SMBus(1)
     spi = spidev.SpiDev()
 
-    glo_dcload = DCLoad_Control(bus, spi)
+    glo_dcload = DCLoad_Control(bus, spi, vtrim=1.022, atrim=0.988)
     glo_dcload.start()
 
 
