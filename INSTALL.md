@@ -1,3 +1,6 @@
+Installation Notes
+
+```
 sudo raspi-config
    enable spi and i2d
 
@@ -44,3 +47,4 @@ fix bug in adafruit library:
         for i, val in enumerate(cmd):
       -    cmdstring[i] = val
       +    cmdstring[i] = chr(val)
+```

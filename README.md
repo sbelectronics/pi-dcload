@@ -1,5 +1,5 @@
-Raspberry Pi controlled DCLoad
-Scott Baker, http://www.smbaker.com/
+# Raspberry Pi controlled DCLoad
+## Scott Baker, http://www.smbaker.com/
 
 A DCLoad controlled by a raspberry pi.
 Uses LCD (or VFD) and encoder as UI.
