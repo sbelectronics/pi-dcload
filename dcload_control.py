@@ -4,17 +4,23 @@
 # This implements the main control loop and the VFD/LCD user interface
 # for the pi-powered dc load.
 
+import argparse
+import ConfigParser
+import os
 import smbus
 import spidev
+import sys
 import threading
 import time
 from dcload import DCLoad, DEFAULT_ADCADDR, DEFAULT_DACGAIN, DEFAULT_ADCGAIN
+from dcload import DEFAULT_SENSE_OHMS
 from smbpi.vfdcontrol import VFDController, trimpad
 from smbpi.ioexpand import MCP23017
 from smbpi.ds1820 import DS1820
 
-DEFAULT_VTRIM=1.0
-DEFAULT_ATRIM=1.0
+DEFAULT_VTRIM = 1.0
+DEFAULT_ATRIM = 1.0
+DEFAULT_CONFIG_FILE = "/etc/dcload.conf"
 
 # either 20x4 or 16x2 depending on the module
 DEFAULT_DISPLAY = "20x4"
@@ -28,13 +34,15 @@ class DCLoad_Control(DCLoad):
                  adcAddr=DEFAULT_ADCADDR,
                  dacGain=DEFAULT_DACGAIN,
                  adcGain=DEFAULT_ADCGAIN,
+                 senseOhms=DEFAULT_SENSE_OHMS,
                  display_kind=DEFAULT_DISPLAY,
                  display_nocursor=DEFAULT_NOCURSOR,
                  atrim=DEFAULT_ATRIM,
                  vtrim=DEFAULT_VTRIM):
-        DCLoad.__init__(self, bus, spi, adcAddr, dacGain, adcGain)
+        DCLoad.__init__(self, bus, spi, adcAddr, dacGain, adcGain, senseOhms)
 
-        self.display = VFDController(MCP23017(bus, 0x20), four_line = (display_kind=="20x4"))
+        self.display = VFDController(MCP23017(bus, 0x20),
+                                     four_line=(display_kind == "20x4"))
         self.display.setDisplay(True, False, False)
         self.display_kind = display_kind
         self.display_nocursor = display_nocursor
@@ -212,13 +220,74 @@ class Temperature_Thread(threading.Thread):
             time.sleep(1)
 
 
+def parse_args():
+    defaults = {"sense_ohms": DEFAULT_SENSE_OHMS,
+                "atrim": DEFAULT_ATRIM,
+                "vtrim": DEFAULT_VTRIM}
+
+    # Get the config file argument
+
+    conf_parser = argparse.ArgumentParser(add_help=False)
+    _help = 'Config file name (default: %s)' % DEFAULT_CONFIG_FILE
+    conf_parser.add_argument(
+        '-c', '--conf_file', dest='conf_file',
+        default=DEFAULT_CONFIG_FILE,
+        type=str,
+        help=_help)
+    args, remaining_argv = conf_parser.parse_known_args()
+
+    # Load the config file
+
+    if args.conf_file:
+        if not os.path.exists(args.conf_file):
+            print >> sys.stderr, "Config file", args.conf_file, "does not exist. Not reading config."
+        else:
+            config = ConfigParser.SafeConfigParser()
+            config.read(args.conf_file)
+            defaults.update(dict(config.items("defaults")))
+
+    # Parse the rest of the args
+
+    parser = argparse.ArgumentParser(parents=[conf_parser])
+
+    _help = 'Sense resistor ohms (default: %0.1f)' % DEFAULT_SENSE_OHMS
+    parser.add_argument(
+        '-s', '--sense', dest='sense_ohms',
+        default=defaults["sense_ohms"],
+        type=float,
+        help=_help)
+
+    _help = 'Amp Trim (default: %0.1f)' % DEFAULT_ATRIM
+    parser.add_argument(
+        '-a', '--atrim', dest='atrim',
+        default=defaults["atrim"],
+        type=float,
+        help=_help)
+
+    _help = 'Volt Trim (default: %0.1f)' % DEFAULT_VTRIM
+    parser.add_argument(
+        '-t', '--vtrim', dest='vtrim',
+        default=defaults["vtrim"],
+        type=float,
+        help=_help)
+
+    args = parser.parse_args()
+
+    return args
+
+
 def startup():
     global glo_dcload
+
+    args = parse_args()
 
     bus = smbus.SMBus(1)
     spi = spidev.SpiDev()
 
-    glo_dcload = DCLoad_Control(bus, spi, vtrim=1.022, atrim=0.988)
+    print "Setup: vtrim=%0.3f, atrim=%0.3f, sense_ohms=%0.1f" % (args.vtrim, args.atrim, args.sense_ohms)
+
+    glo_dcload = DCLoad_Control(bus, spi, vtrim=args.vtrim, atrim=args.atrim, 
+                                senseOhms=args.sense_ohms)
     glo_dcload.start()
 
 
